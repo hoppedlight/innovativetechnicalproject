@@ -162,6 +162,27 @@ const PRESETS = [
   makePreset('Dense urban', 313, 24, CANVAS_W, CANVAS_H),
 ]
 
+function RoutePath({ route, nodes, color, opacity = 1, animated = false }) {
+  if (!route || route.length < 2) return null
+  const pts = [...route, route[0]].map(i => nodes[i])
+  const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+  return (
+    <path
+      d = {d}
+      fill = "none"
+      stroke = {color}
+      strokeWidth = {animated ? 2.5 : 1.5}
+      strokeOpacity = {opacity}
+      strokeLinejoin = "round"
+      strokeLinecap = "round"
+      style = {animated ? {
+        strokeDasharray : 2000,
+        strokeDashoffset : 0,
+        animation : 'dash 1.2s ease-out forwards',
+      } : {}}
+    />
+  )
+}
 
 export default function App() {
   const [count, setCount] = useState(0)
