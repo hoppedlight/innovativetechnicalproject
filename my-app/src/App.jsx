@@ -18,15 +18,138 @@ const ALGO_META = [
   { id : 'dijkstra', label : 'Dijkstra', short : 'DIJK', color : COLORS.dijkstra, desc : `Shortest cumulative path from depot through a priority queue. Graph-aware.` },
 ]
 
+// Helpers 
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
+
+const totalDist = (route, nodes) =>
+  route.reduce((s, id, i, arr) => {
+    const next = arr[(i + 1) % arr.length]
+    return s + dist(nodes[id], nodes[next])
+  }, 0)
+
+// Algorithms 
+function nearestNeighbour(nodes) {
+  if (nodes.length < 2) return nodes.map((_, i) => i)
+  const visited = new Set([0])
+  const route = [0]
+  while (visited.size < nodes.length) {
+    const last = route[route.length - 1]
+    let best = -1, bestD = Infinity
+    for (let i = 0; i < nodes.length; i++) {
+      if (!visited.has(i)) {
+        const d = dist(nodes[last], nodes[i])
+        if (d < bestD) { bestD = d; best = i }
+      }
+    }
+    visited.add(best)
+    route.push(best)
+  }
+  return route
+}
+
+function twoOpt(nodes) {
+  let route = nearestNeighbour(nodes)
+  let improved = true
+  while (improved) {
+    improved = false
+    for (let i = 1; i < route.length - 1; i++) {
+      for (let k = i + 1; k < route.length; k++) {
+        const d1 = dist(nodes[route[i - 1]], nodes[route[i]])   + dist(nodes[route[k]], nodes[route[(k + 1) % route.length]])
+        const d2 = dist(nodes[route[i - 1]], nodes[route[k]])   + dist(nodes[route[i]], nodes[route[(k + 1) % route.length]])
+        if (d2 < d1 - 0.001) {
+          route = [...route.slice(0, i), ...route.slice(i, k + 1).reverse(), ...route.slice(k + 1)]
+          improved = true
+        }
+      }
+    }
+  }
+  return route
+}
+
+function greedyTSP(nodes) {
+  if (nodes.length < 2) return nodes.map((_, i) => i)
+  const edges = []
+  for (let i = 0; i < nodes.length; i++)
+    for (let j = i + 1; j < nodes.length; j++)
+      edges.push({ i, j, d : dist(nodes[i], nodes[j]) })
+  edges.sort((a, b) => a.d - b.d)
+
+  const degree = new Array(nodes.length).fill(0)
+  const adj = Array.from({ length: nodes.length }, () => [])
+
+  const find = (parent, x) => { while (parent[x] !== x) x = parent[x]; return x }
+  const parent = nodes.map((_, i) => i)
+
+  for (const { i, j } of edges) {
+    if (adj.flat().length / 2 === nodes.length) break
+    if (degree[i] >= 2 || degree[j] >= 2) continue
+    const ri = find(parent, i), rj = find(parent, j)
+    if (ri === rj && adj.flat().length / 2 < nodes.length - 1) continue
+    parent[ri] = rj
+    degree[i]++; degree[j]++
+    adj[i].push(j); adj[j].push(i)
+  }
+
+  const route = [0]
+  const seen = new Set([0])
+  while (route.length < nodes.length) {
+    const cur = route[route.length - 1]
+    const next = adj[cur]?.find(n => !seen.has(n))
+    if (next === undefined) break
+    seen.add(next)
+    route.push(next)
+  }
+  for (let i = 0; i < nodes.length; i++) if (!seen.has(i)) route.push(i)
+  return route
+}
+
+function dijkstraTSP(nodes) {
+  if (nodes.length < 2) return nodes.map((_, i) => i)
+  const visited = new Set([0])
+  const dist_from = new Array(nodes.length).fill(Infinity)
+  dist_from[0] = 0
+  const route = [0]
+  while (visited.size < nodes.length) {
+    const cur = route[route.length - 1]
+    for (let i = 0; i < nodes.length; i++) {
+      if (!visited.has(i)) {
+        const d = dist_from[cur] + dist(nodes[cur], nodes[i])
+        if (d < dist_from[i]) dist_from[i] = d
+      }
+    }
+    let best = -1, bestD = Infinity
+    for (let i = 0; i < nodes.length; i++) {
+      if (!visited.has(i) && dist_from[i] < bestD) { bestD = dist_from[i]; best = i }
+    }
+    if (best === -1) break
+    visited.add(best); route.push(best)
+  }
+  return route
+}
+
+// Run all algos + measure time 
+function runAll(nodes) {
+  if (nodes.length < 2) return {}
+  const fns = { nn : nearestNeighbour, twoopt : twoOpt, greedy : greedyTSP, dijkstra : dijkstraTSP }
+  const out = {}
+  for (const [id, fn] of Object.entries(fns)) {
+    const t0 = performance.now()
+    const route = fn(nodes)
+    const ms = performance.now() - t0
+    out[id] = { route, dist : totalDist(route, nodes), ms }
+  }
+  return out
+}
+
 
 function makePreset(name, seed, n, W, H) {
   const rng = (s => () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646 })(seed)
   const pts = Array.from({ length: n }, (_, i) => ({
-    id : i, label : i === 0 ? 'Depot' : `P${String(i).padStart(2,'0')}`,
+    id : i, label : i === 0 ? 'Depot' : `P${String(i).padStart(2, '0')}`,
     x : Math.round(rng() * (W - 80) + 40),
     y : Math.round(rng() * (H - 80) + 40),
   }))
-  return { name, nodes: pts }
+  return { name, nodes : pts }
 }
 
 const CANVAS_W = 680
