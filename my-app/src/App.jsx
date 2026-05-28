@@ -11,6 +11,14 @@ const COLORS = {
   dijkstra : '#CE93D8',
 }
 
+const ALGO_META = [
+  { id : 'nn', label : 'Nearest Neighbor', short : 'NN', color : COLORS.nn, desc : `Start from depot, always visit the closest unvisited stop. Fast, intuitive, suboptimal.` },
+  { id : 'twoopt', label : '2-Opt', short : '2-OPT', color : COLORS.twoopt, desc : `Iteratively reverses sub-routes to remove crossings. Classic TSP local search.` },
+  { id : 'greedy', label : 'Greedy', short : 'GDY', color : COLORS.greedy, desc : `Build route by merging shortest edges that don't create a premature cycle.` },
+  { id : 'dijkstra', label : 'Dijkstra', short : 'DIJK', color : COLORS.dijkstra, desc : `Shortest cumulative path from depot through a priority queue. Graph-aware.` },
+]
+
+
 function makePreset(name, seed, n, W, H) {
   const rng = (s => () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646 })(seed)
   const pts = Array.from({ length: n }, (_, i) => ({
