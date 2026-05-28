@@ -222,6 +222,54 @@ export default function App() {
   const [addMode, setAddMode] = useState(false)
   const svgRef = useRef(null)
 
+  const recompute = useCallback((ns) => {
+    setResults(runAll(ns))
+    setAnimKey(k => k + 1)
+  }, [])
+
+  const loadPreset = (i) => {
+    setPresetIdx(i)
+    setNodes(PRESETS[i].nodes)
+    recompute(PRESETS[i].nodes)
+    setFocusAlgo(null)
+  }
+
+  const handleCanvasClick = (e) => {
+    if (!addMode) return
+    const svg = svgRef.current
+    const rect = svg.getBoundingClientRect()
+    const scaleX = CANVAS_W / rect.width
+    const scaleY = CANVAS_H / rect.height
+    const x = Math.round((e.clientX - rect.left) * scaleX)
+    const y = Math.round((e.clientY - rect.top) * scaleY)
+    const id = nodes.length
+    const newNodes = [...nodes, { id, label: `P${String(id).padStart(2,'0')}`, x, y }]
+    setNodes(newNodes)
+    recompute(newNodes)
+  }
+
+  const removeLastNode = () => {
+    if (nodes.length <= 2) return
+    const newNodes = nodes.slice(0, -1)
+    setNodes(newNodes)
+    recompute(newNodes)
+  }
+
+  const toggleAlgo = (id) => {
+    setActiveAlgos(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) { if (next.size > 1) next.delete(id) }
+      else next.add(id)
+      return next
+    })
+  }
+
+  const bestId = results && Object.entries(results).length > 0
+    ? Object.entries(results).sort((a, b) => a[1].dist - b[1].dist)[0][0]
+    : null
+
+  const displayAlgos = focusAlgo ? [focusAlgo] : [...activeAlgos]
+
 
   return (
     <>
