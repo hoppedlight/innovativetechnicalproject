@@ -184,6 +184,33 @@ function RoutePath({ route, nodes, color, opacity = 1, animated = false }) {
   )
 }
 
+function NodeDot({ node, index, selected, onClick }) {
+  const isDepot = index === 0
+  return (
+    <g
+      transform = {`translate(${node.x},${node.y})`}
+      onClick = {onClick}
+      style = {{ cursor : 'pointer' }}
+    >
+      {selected && (
+        <circle r = {isDepot ? 14 : 11} fill = "none" stroke = "#fff" strokeWidth = {1.5} strokeOpacity = {0.4} />
+      )}
+      <circle
+        r = {isDepot ? 10 : 7}
+        fill = {isDepot ? '#F5A623' : '#1a2332'}
+        stroke = {isDepot ? '#FFD580' : '#4FC3F7'}
+        strokeWidth = {isDepot ? 2 : 1.5}
+      />
+      {isDepot && (
+        <text textAnchor = "middle" dominantBaseline = "central" fontSize = {10} fontWeight = {700} fill = "#1a1f2e" fontFamily = "monospace">D</text>
+      )}
+      {!isDepot && (
+        <text textAnchor = "middle" dominantBaseline = "central" fontSize = {8} fill = "#93c5fd" fontFamily = "monospace">{index}</text>
+      )}
+    </g>
+  )
+}
+
 export default function App() {
   const [count, setCount] = useState(0)
   const [nodes, setNodes] = useState(PRESETS[0].nodes)
