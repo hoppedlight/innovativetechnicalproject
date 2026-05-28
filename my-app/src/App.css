@@ -37,6 +37,7 @@ body,
   color : #f0f6fc;
   letter-spacing : -0.5px;
   line-height : 1.1;
+  text-align: left;
 }
 
 .header-left h1 span {

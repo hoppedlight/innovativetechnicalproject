@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
@@ -277,7 +277,7 @@ export default function App() {
         {/* Header */}
         <div className = "header">
           <div className = "header-left">
-            <h1>Route<span>Improver</span></h1>
+            <h1>Route<span> Improver</span></h1>
             <p>Parcel delivery · Algorithm explorer · Prototype v0.1</p>
           </div>
           <div className = "version-badge">TSP · DIJKSTRA · 2-OPT · GREEDY</div>
