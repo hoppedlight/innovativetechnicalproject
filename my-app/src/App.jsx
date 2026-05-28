@@ -5,13 +5,34 @@ import heroImg from './assets/hero.png'
 import './App.css'
 
 const COLORS = {
-  nn :     '#F5A623',
+  nn : '#F5A623',
   twoopt : '#4FC3F7',
   greedy : '#81C784',
-  dijkstra :'#CE93D8',
+  dijkstra : '#CE93D8',
 }
 
-function App() {
+function makePreset(name, seed, n, W, H) {
+  const rng = (s => () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646 })(seed)
+  const pts = Array.from({ length: n }, (_, i) => ({
+    id : i, label : i === 0 ? 'Depot' : `P${String(i).padStart(2,'0')}`,
+    x : Math.round(rng() * (W - 80) + 40),
+    y : Math.round(rng() * (H - 80) + 40),
+  }))
+  return { name, nodes: pts }
+}
+
+const CANVAS_W = 680
+const CANVAS_H = 420
+
+const PRESETS = [
+  makePreset('City grid', 42, 12, CANVAS_W, CANVAS_H),
+  makePreset('Suburban', 99, 18, CANVAS_W, CANVAS_H),
+  makePreset('Rural sparse', 7, 8, CANVAS_W, CANVAS_H),
+  makePreset('Dense urban', 313, 24, CANVAS_W, CANVAS_H),
+]
+
+
+export default function App() {
   const [count, setCount] = useState(0)
 
   return (
@@ -266,5 +287,3 @@ function App() {
 
   )
 }
-
-export default App
