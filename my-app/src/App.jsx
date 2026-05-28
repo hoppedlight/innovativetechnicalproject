@@ -42,6 +42,15 @@ const PRESETS = [
 
 export default function App() {
   const [count, setCount] = useState(0)
+  const [nodes, setNodes] = useState(PRESETS[0].nodes)
+  const [results, setResults] = useState(() => runAll(PRESETS[0].nodes))
+  const [activeAlgos, setActiveAlgos] = useState(new Set(['nn','twoopt']))
+  const [focusAlgo, setFocusAlgo] = useState(null)
+  const [animKey, setAnimKey] = useState(0)
+  const [presetIdx, setPresetIdx] = useState(0)
+  const [addMode, setAddMode] = useState(false)
+  const svgRef = useRef(null)
+
 
   return (
     <>
