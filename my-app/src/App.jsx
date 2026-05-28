@@ -4,118 +4,266 @@ import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
 
+const COLORS = {
+  nn :     '#F5A623',
+  twoopt : '#4FC3F7',
+  greedy : '#81C784',
+  dijkstra :'#CE93D8',
+}
+
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+      <div className = "app">
+        {/* Header */}
+        <div className = "header">
+          <div className = "header-left">
+            <h1>Route<span>Improver</span></h1>
+            <p>Parcel delivery · Algorithm explorer · Prototype v0.1</p>
+          </div>
+          <div className = "version-badge">TSP · DIJKSTRA · 2-OPT · GREEDY</div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
+        <div className = "grid">
+          {/* Canvas */}
+          <div>
+            <div className = "panel">
+              {/* Preset selector */}
+              <div className = "presets">
+                {PRESETS.map((p, i) => (
+                  <button
+                    key = {i}
+                    className = {`preset-pill${presetIdx === i ? ' active' : ''}`}
+                    onClick = {() => loadPreset(i)}
+                  >
+                    {p.name} ({p.nodes.length})
+                  </button>
+                ))}
+              </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+              {/* Algorithm toggler */}
+              <div className = "algo-toggles">
+                <span style = {{ fontFamily : 'JetBrains Mono', fontSize : 10, color : '#6e7681', marginRight : 4 }}>SHOW :</span>
+                {ALGO_META.map(a => {
+                  const active = activeAlgos.has(a.id)
+                  return (
+                    <button
+                      key = {a.id}
+                      className = "algo-chip"
+                      style = {{
+                        borderColor : active ? a.color : 'transparent',
+                        color : active ? a.color : '#6e7681',
+                        background : active ? `${a.color}18` : '#21262d',
+                      }}
+                      onClick = {() => toggleAlgo(a.id)}
+                    >
+                      {a.short}
+                    </button>
+                  )
+                })}
+                {focusAlgo && (
+                  <button className = "btn btn-sm" onClick={() => setFocusAlgo(null)}>
+                    ✕ clear focus
+                  </button>
+                )}
+              </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+              {/* Canvas */}
+              <div className = "canvas-wrap">
+                <svg
+                  ref = {svgRef}
+                  className = {`canvas-svg${addMode ? ' add-mode' : ''}`}
+                  viewBox = {`0 0 ${CANVAS_W} ${CANVAS_H}`}
+                  onClick = {handleCanvasClick}
+                  key = {animKey}
+                >
+                  {/* Grid */}
+                  {Array.from({ length: Math.floor(CANVAS_W / 60) }, (_, i) => (
+                    <line key = {`gx${i}`} className = "grid-line" x1 = {(i + 1) * 60} y1 = {0} x2 = {(i + 1) * 60} y2 = {CANVAS_H} />
+                  ))}
+                  {Array.from({ length: Math.floor(CANVAS_H / 60) }, (_, i) => (
+                    <line key = {`gy${i}`} className = "grid-line" x1 = {0} y1 = {(i + 1) * 60} x2 = {CANVAS_W} y2 = {(i + 1) * 60} />
+                  ))}
+
+                  {/* Routes */}
+                  {ALGO_META.map(a => {
+                    if (!displayAlgos.includes(a.id)) return null
+                    const r = results[a.id]
+                    if (!r) return null
+                    return (
+                      <RoutePath
+                        key = {a.id}
+                        route = {r.route}
+                        nodes = {nodes}
+                        color = {a.color}
+                        opacity = {focusAlgo ? (focusAlgo === a.id ? 1 : 0.15) : 0.75}
+                        animated = {focusAlgo === a.id}
+                      />
+                    )
+                  })}
+
+                  {/* Nodes */}
+                  {nodes.map((node, i) => (
+                    <NodeDot
+                      key = {i}
+                      node = {node}
+                      index = {i}
+                      selected = {false}
+                      onClick = {(e) => { e.stopPropagation() }}
+                    />
+                  ))}
+                </svg>
+              </div>
+
+              {/* Stat summary */}
+              {bestId && results[bestId] && (
+                <div className = "stat-row">
+                  <div className = "stat-cell">
+                    <div className = "stat-cell-label">Nodes</div>
+                    <div className = "stat-cell-val">{nodes.length}</div>
+                    <div className = "stat-cell-sub">incl. depot</div>
+                  </div>
+                  <div className = "stat-cell">
+                    <div className = "stat-cell-label">Best route</div>
+                    <div className = "stat-cell-val" style = {{ color : COLORS[bestId] }}>
+                      {Math.round(results[bestId].dist)}
+                    </div>
+                    <div className = "stat-cell-sub">px units</div>
+                  </div>
+                  <div className = "stat-cell">
+                    <div className = "stat-cell-label">Best algo</div>
+                    <div className = "stat-cell-val" style = {{ color : COLORS[bestId], fontSize : 12 }}>
+                      {ALGO_META.find(a => a.id === bestId)?.short}
+                    </div>
+                    <div className = "stat-cell-sub">{results[bestId].ms.toFixed(2)} ms</div>
+                  </div>
+                  <div className = "stat-cell">
+                    <div className = "stat-cell-label">Worst/best</div>
+                    <div className = "stat-cell-val">
+                      {(() => {
+                        const vals = Object.values(results).map(r => r.dist)
+                        return `${Math.round((Math.max(...vals) / Math.min(...vals) - 1) * 100)}%`
+                      })()}
+                    </div>
+                    <div className = "stat-cell-sub">gap</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Toolbar */}
+              <div className = "toolbar">
+                <button
+                  className = {`btn${addMode ? ' active' : ''}`}
+                  onClick = {() => setAddMode(v => !v)}
+                >
+                  {addMode ? '✓ click map to add' : '+ add stop'}
+                </button>
+                <button className = "btn danger" onClick = {removeLastNode}>
+                  − remove last
+                </button>
+                <div className = "sep" />
+                <button className = "btn" onClick = {() => recompute(nodes)}>
+                  ↻ rerun
+                </button>
+                <div className = "node-count">{nodes.length} stops</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Results sidebar */}
+          <div style={{ display : 'flex', flexDirection : 'column', gap : 20 }}>
+            {/* Algorithm results */}
+            <div className = "panel">
+              <div className = "panel-header">
+                <span className = "panel-title">Algorithm results</span>
+                <span style = {{ fontFamily : 'JetBrains Mono', fontSize : 10, color : '#6e7681' }}>click to focus</span>
+              </div>
+              <div className = "results-list">
+                {ALGO_META.map(a => {
+                  const r = results[a.id]
+                  if (!r) return null
+                  const isBest = a.id === bestId
+                  const isFocused = focusAlgo === a.id
+                  return (
+                    <div
+                      key = {a.id}
+                      className = {`result-card${isFocused ? ' focused' : ''}`}
+                      style = {{ '--accent': a.color }}
+                      onClick = {() => setFocusAlgo(isFocused ? null : a.id)}
+                    >
+                      <div className = "result-card-header" style = {{ background: `${a.color}0a` }}>
+                        <div className = "result-card-name">
+                          <div className = "dot" style = {{ background: a.color }} />
+                          {a.label}
+                        </div>
+                        {isBest && <span className = "best-badge">BEST</span>}
+                      </div>
+                      <div className = "result-card-body">
+                        <div className = "metric">
+                          <div className = "metric-label">Distance</div>
+                          <div className = {`metric-value${isBest ? ' highlight' : ''}`}>
+                            {Math.round(r.dist)}
+                          </div>
+                        </div>
+                        <div className = "metric">
+                          <div className = "metric-label">Time</div>
+                          <div className = "metric-value">{r.ms < 0.1 ? '<0.1' : r.ms.toFixed(1)} ms</div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Bar chart */}
+              {Object.keys(results).length > 0 && (() => {
+                const maxD = Math.max(...Object.values(results).map(r => r.dist))
+                return (
+                  <div className = "chart-area">
+                    <div className = "chart-label">Distance comparison</div>
+                    {ALGO_META.map(a => {
+                      const r = results[a.id]
+                      if (!r) return null
+                      const pct = (r.dist / maxD) * 100
+                      return (
+                        <div key = {a.id} className = "bar-row">
+                          <div className = "bar-name">{a.short}</div>
+                          <div className = "bar-track">
+                            <div className = "bar-fill" style = {{ width:`${pct}%`, background: a.color }} />
+                          </div>
+                          <div className = "bar-val">{Math.round(r.dist)}</div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })()}
+            </div>
+
+            {/* Algorithm descriptions */}
+            <div className = "panel">
+              <div className = "panel-header">
+                <span className = "panel-title">About the algorithms</span>
+              </div>
+              <div className = "algo-info">
+                {ALGO_META.map(a => (
+                  <div key = {a.id} className = "algo-info-card">
+                    <div className = "algo-info-dot" style = {{ background : a.color }} />
+                    <div>
+                      <div className = "algo-info-name">{a.label}</div>
+                      <div className = "algo-info-text">{a.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
+
   )
 }
 
